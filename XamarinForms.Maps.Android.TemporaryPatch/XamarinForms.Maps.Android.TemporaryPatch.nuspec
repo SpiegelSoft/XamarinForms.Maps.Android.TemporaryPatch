@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>XamarinForms.Maps.Android.TemporaryPatch</id>
-    <version>0.0.0.1</version>
+    <version>$version$</version>
     <title>Xamarin Forms Maps Temporary Patch</title>
     <authors>SpiegelSoft Ltd</authors>
     <owners>SpiegelSoft Ltd</owners>
