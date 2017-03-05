@@ -21,6 +21,15 @@ using Math = System.Math;
 
 namespace XamarinForms.Maps.Android.TemporaryPatch
 {
+    public static class MapRendererConstants
+    {
+        public static readonly PropertyInfo LastMoveToRegionProperty = typeof(Map).GetProperty("LastMoveToRegion", BindingFlags.NonPublic | BindingFlags.Instance);
+        public static readonly PropertyInfo VisibleRegionProperty = typeof(Map).GetProperty("VisibleRegion");
+        public static readonly PropertyInfo PinIdProperty = typeof(Pin).GetProperty("Id", BindingFlags.NonPublic | BindingFlags.Instance);
+        public static readonly MethodInfo PinSendTapMethod = typeof(Pin).GetMethod("SendTap", BindingFlags.NonPublic | BindingFlags.Instance);
+        public static readonly object[] EmptyArgumentArray = new object[0];
+    }
+
     public class MapRenderer : MapRenderer<Map> { }
 
     public class MapRenderer<TMap> : ViewRenderer<TMap, MapView>, 
@@ -31,16 +40,12 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
         IOnMapReadyCallback
         where TMap : Map
     {
-        private static readonly PropertyInfo _lastMoveToRegionProperty = typeof(Map).GetProperty("LastMoveToRegion", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly PropertyInfo _visibleRegionProperty = typeof(Map).GetProperty("VisibleRegion");
-        private static readonly PropertyInfo _pinIdProperty = typeof(Pin).GetProperty("Id", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly MethodInfo _pinSendTapMethod = typeof(Pin).GetMethod("SendTap", BindingFlags.NonPublic | BindingFlags.Instance);
         const string MoveMessageName = "MapMoveToRegion";
         static Bundle s_bundle;
 
         bool _disposed;
 
-        bool _init = true;
+        bool _init;
 
         List<Marker> _markers;
 
@@ -52,7 +57,6 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
         protected Map Map => Element;
 
         protected GoogleMap NativeMap;
-        private static readonly object[] EmptyArgumentArray = new object[0];
 
         internal static Bundle Bundle
         {
@@ -128,6 +132,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
                 oldMapView.Dispose();
             }
 
+            _init = true;
             Control.GetMapAsync(this);
             MessagingCenter.Subscribe<Map, MapSpan>(this, MoveMessageName, OnMoveToRegionMessage, Map);
 
@@ -179,7 +184,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
 
         private void MoveToLastRegion()
         {
-            var mapSpan = _lastMoveToRegionProperty.GetValue(Element) as MapSpan;
+            var mapSpan = MapRendererConstants.LastMoveToRegionProperty.GetValue(Element) as MapSpan;
             if (mapSpan != null) MoveToRegion(mapSpan, false);
         }
 
@@ -206,7 +211,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
                 var marker = map.AddMarker(opts);
 
                 // associate pin with marker for later lookup in event handlers
-                _pinIdProperty.SetValue(pin, marker.Id);
+                MapRendererConstants.PinIdProperty.SetValue(pin, marker.Id);
                 return marker;
             }));
         }
@@ -221,7 +226,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
             for (var i = 0; i < Map.Pins.Count; i++)
             {
                 Pin pin = Map.Pins[i];
-                if ((string)_pinIdProperty.GetValue(pin) != marker.Id)
+                if ((string)MapRendererConstants.PinIdProperty.GetValue(pin) != marker.Id)
                 {
                     continue;
                 }
@@ -232,7 +237,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
 
             // only consider event handled if a handler is present. 
             // Else allow default behavior of displaying an info window.
-            if (targetPin != null) _pinSendTapMethod.Invoke(targetPin, EmptyArgumentArray);
+            if (targetPin != null) MapRendererConstants.PinSendTapMethod.Invoke(targetPin, MapRendererConstants.EmptyArgumentArray);
         }
 
         void MoveToRegion(MapSpan span, bool animate)
@@ -311,7 +316,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
 
             foreach (Pin p in pins)
             {
-                var marker = _markers.FirstOrDefault(m => (object)m.Id == _pinIdProperty.GetValue(p));
+                var marker = _markers.FirstOrDefault(m => (object)m.Id == MapRendererConstants.PinIdProperty.GetValue(p));
                 if (marker == null)
                 {
                     continue;
@@ -361,7 +366,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
             LatLng lr = projection.FromScreenLocation(new global::Android.Graphics.Point(width, height));
             double dlat = Math.Max(Math.Abs(ul.Latitude - lr.Latitude), Math.Abs(ur.Latitude - ll.Latitude));
             double dlong = Math.Max(Math.Abs(ul.Longitude - lr.Longitude), Math.Abs(ur.Longitude - ll.Longitude));
-            _visibleRegionProperty.SetValue(Element, new MapSpan(new Position(pos.Latitude, pos.Longitude), dlat, dlong));
+            MapRendererConstants.VisibleRegionProperty.SetValue(Element, new MapSpan(new Position(pos.Latitude, pos.Longitude), dlat, dlong));
         }
 
         public virtual void OnMapReady(GoogleMap googleMap)
@@ -375,7 +380,6 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
                 NativeMap.UiSettings.ScrollGesturesEnabled = Map.HasScrollEnabled;
                 NativeMap.MyLocationEnabled = NativeMap.UiSettings.MyLocationButtonEnabled = Map.IsShowingUser;
                 SetMapType();
-                if (!_init) return;
                 MoveToLastRegion();
                 OnCollectionChanged(Element.Pins, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                 _init = false;
