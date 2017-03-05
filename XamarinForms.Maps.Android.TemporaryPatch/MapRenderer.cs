@@ -172,18 +172,9 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
         protected override void OnLayout(bool changed, int l, int t, int r, int b)
         {
             base.OnLayout(changed, l, t, r, b);
-
-            if (_init)
-            {
-                MoveToLastRegion();
-                OnCollectionChanged(Element.Pins, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                _init = false;
-            }
-            else if (changed)
-            {
-                UpdateVisibleRegion(NativeMap.CameraPosition.Target);
-                MoveToLastRegion();
-            }
+            if (_init || !changed) return;
+            UpdateVisibleRegion(NativeMap.CameraPosition.Target);
+            MoveToLastRegion();
         }
 
         private void MoveToLastRegion()
@@ -379,12 +370,15 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
             if (NativeMap != null)
             {
                 HookUpNativeMapEvents();
-
                 NativeMap.UiSettings.ZoomControlsEnabled = Map.HasZoomEnabled;
                 NativeMap.UiSettings.ZoomGesturesEnabled = Map.HasZoomEnabled;
                 NativeMap.UiSettings.ScrollGesturesEnabled = Map.HasScrollEnabled;
                 NativeMap.MyLocationEnabled = NativeMap.UiSettings.MyLocationButtonEnabled = Map.IsShowingUser;
                 SetMapType();
+                if (!_init) return;
+                MoveToLastRegion();
+                OnCollectionChanged(Element.Pins, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                _init = false;
             }
         }
 
