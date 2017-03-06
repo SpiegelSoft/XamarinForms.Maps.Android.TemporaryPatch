@@ -8,7 +8,7 @@
     <owners>SpiegelSoft Ltd</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
 	<licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
-	<projectUrl>https://github.com/SpiegelSoft/XamarinForms.Reactive.FSharp</projectUrl>
+	<projectUrl>https://github.com/SpiegelSoft/XamarinForms.Maps.Android.TemporaryPatch</projectUrl>
     <description>Temporary fix for https://bugzilla.xamarin.com/show_bug.cgi?id=52625</description>
     <releaseNotes>Initial Build.</releaseNotes>
     <copyright>Copyright 2017</copyright>

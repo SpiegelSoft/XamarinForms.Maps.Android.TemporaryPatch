@@ -28,6 +28,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
         public static readonly PropertyInfo PinIdProperty = typeof(Pin).GetProperty("Id", BindingFlags.NonPublic | BindingFlags.Instance);
         public static readonly MethodInfo PinSendTapMethod = typeof(Pin).GetMethod("SendTap", BindingFlags.NonPublic | BindingFlags.Instance);
         public static readonly object[] EmptyArgumentArray = new object[0];
+        public static Bundle Bundle { get; set; }
     }
 
     public class MapRenderer : MapRenderer<Map> { }
@@ -41,7 +42,6 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
         where TMap : Map
     {
         const string MoveMessageName = "MapMoveToRegion";
-        static Bundle s_bundle;
 
         bool _disposed;
 
@@ -57,11 +57,6 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
         protected Map Map => Element;
 
         protected GoogleMap NativeMap;
-
-        internal static Bundle Bundle
-        {
-            set { s_bundle = value; }
-        }
 
         public void OnCameraChange(CameraPosition pos)
         {
@@ -115,7 +110,7 @@ namespace XamarinForms.Maps.Android.TemporaryPatch
             MapView oldMapView = Control;
 
             MapView mapView = CreateNativeControl();
-            mapView.OnCreate(s_bundle);
+            mapView.OnCreate(MapRendererConstants.Bundle);
             mapView.OnResume();
             SetNativeControl(mapView);
 
